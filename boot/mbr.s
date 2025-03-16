@@ -1,28 +1,25 @@
-SECTION MBR vstart=0x7c00
-  mov ax, cs
-  mov es, ax
-  mov ss, ax
-  mov sp, 0x7c00 ; 0x7c00 down as stack is temporary safe
+.code16
+.section .text
+.global _main
 
-  mov ax, 0x0600 ; clear screen
-  mov bh, 0x07   ; color attribute 0x07
-  xor cx, cx     ; upper left corner
-  mov dx, 0x184f ; bottom right corner
-  int 0x10
+_main:
+  mov %cs, %ax
+  mov %ax, %ss
+  mov %ax, %sp
+  mov $0xb800, %ax
+  mov %ax, %es
 
-  mov ah, 0x03   ; get cursor position
-  xor bh, bh     ; video page 0
-  int 0x10
+  mov $0x0600, %ax # clear screen
+  mov $0x07, %bh   # color attribute 0x07
+  xor %cx, %cx     # upper left corner
+  mov $0x184f, %dx # bottom right corner
+  int $0x10
 
-  mov cx, 0x03   ; length of string
-  mov ax, 0x1301 ; write string, move cursor
-  mov bx, 0x07   ; video page 0, color attribute 0x07
-  lea bp, [msg]  ; ES:BP is the pointer to string
-  int 0x10
+  movb $'M', %es:[0x00]
+  movb $0x07, %es:[0x01]
+  movb $'B', %es:[0x02]
+  movb $0x07, %es:[0x03]
+  movb $'R', %es:[0x04]
+  movb $0x07, %es:[0x05]
 
-  jmp $
-
-msg db "MBR"
-
-times 510-($-$$) db 0x00
-dw 0xAA55
+  jmp .
