@@ -1,2 +1,6 @@
 boot/mbr
+boot/loader
+
+exordium.img
+
 *.o
