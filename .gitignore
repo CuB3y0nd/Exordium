@@ -4,3 +4,5 @@ boot/loader
 exordium.img
 
 *.o
+
+.gdb_history

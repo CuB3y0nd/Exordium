@@ -16,7 +16,7 @@ boot/mbr: boot/mbr.o
 	$(LD) -Ttext 0x7c00 --oformat binary -o $@ $<
 
 boot/loader: boot/loader.o
-	$(LD) -Ttext 0x900 --oformat binary -o $@ $<
+	$(LD) --oformat binary -o $@ $<
 
 create_img:
 	qemu-img create -f raw $(IMG) $(IMG_SIZE)

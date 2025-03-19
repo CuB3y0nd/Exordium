@@ -15,8 +15,11 @@ _start:
   mov $0x184f, %dx /* bottom right corner */
   int $0x10
 
-  mov $LOADER_SECTOR, %eax
-  mov $LOADER_BASE, %bx
+  /* load the loader to ES:BX (0x90000) */
+  mov $LOADER_SEGMENT, %ax
+  mov %ax, %es
+  xor %bx, %bx
+  mov $LOADER_SECTOR, %ax
 
   /* sector quantities that awaiting to write */
   /* Note: Since we can sure our loader total size will less than 512 bytes,
@@ -25,15 +28,15 @@ _start:
 
   call read_disk
 
-  ljmp $0, $LOADER_BASE
+  ljmp $LOADER_SEGMENT, $0
 
 /*
  * read_disk read memory from the disk in 16 bit mode (adhere LBA28)
  */
 
 read_disk:
-  /* backup registers */
-  mov %eax, %esi
+  /* backup sector quantities */
+  mov %ax, %si
 
   /* setup sector quantities that we want read */
   mov $0x01f2, %dx
@@ -41,7 +44,7 @@ read_disk:
   out %al, %dx
 
   /* LBA (7:0) */
-  mov %esi, %eax
+  mov %si, %ax
   mov $0x01f3, %dx
   out %al, %dx
 
@@ -95,7 +98,7 @@ read_disk:
   mov $0x01f0, %dx
 .read_it:
   in %dx, %ax
-  mov %ax, (%bx)
+  mov %ax, %es:(%bx)
   add $2, %bx
   /* TODO: 64KB boundary detection */
   loop .read_it
