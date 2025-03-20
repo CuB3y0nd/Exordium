@@ -15,14 +15,16 @@ _start:
   mov $0x184f, %dx /* bottom right corner */
   int $0x10
 
-  /* load the loader to ES:BX (0x90000) */
+  /* loader will be loaded to ES:DI (0x90000) */
   mov $LOADER_SEGMENT, %ax
   mov %ax, %es
-  xor %bx, %bx
+  xor %di, %di
+
+  /* set LBA address of the loader */
   mov $LOADER_SECTOR, %ax
 
   /* sector quantities that awaiting to write */
-  /* Note: Since we can sure our loader total size will less than 512 bytes,
+  /* Note: Since we can sure our loader's total size will less than 512 bytes,
    * so set to 1 is enough. */
   mov $1, %cx
 
@@ -31,7 +33,7 @@ _start:
   ljmp $LOADER_SEGMENT, $0
 
 /*
- * read_disk read memory from the disk in 16 bit mode (adhere LBA28)
+ * read_disk reads memory from the disk in 16 bit mode (adhere LBA28)
  */
 
 read_disk:
@@ -63,7 +65,7 @@ read_disk:
   and $0x0f, %al
 
   /*
-   * The fifth and seventh bit are obsolete, just ignore it and set to 1, keep
+   * The fifth and seventh bit are obsoleted, just ignore it and set to 1, keep
    * the fourth bit with 0 so read from the primary disk and set the sixth bit
    * to 1, means we use LBA addressing method. */
   or $0xe0, %al
@@ -89,19 +91,19 @@ read_disk:
   cmp $0x08, %al
   jnz .wait_disk
 
-  /* read data from disk */
+/* read data from the disk to ES:DI (0x90000) */
 
+.read_it:
   /*
    * Note: Each sector have 512 bytes and read 1 word every time) so we need to
    * read SECTORS*512/2 (SECTORS*256) times for each. */
   shl $8, %cx
+
   mov $0x01f0, %dx
-.read_it:
-  in %dx, %ax
-  mov %ax, %es:(%bx)
-  add $2, %bx
-  /* TODO: 64KB boundary detection */
-  loop .read_it
+  cld
+  rep insw
+  /* TODO: Add 64KB boundary detection (due we can sure that our loader will
+   * not exceed 64KB, so i just leave this as a TODO.) */
   ret
 
   .fill 510-(.-_start), 1, 0
