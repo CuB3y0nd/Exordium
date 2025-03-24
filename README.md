@@ -4,7 +4,7 @@ A tiny linux kernel built from scratch.
 
 ## Setting up the Development Environment
 
-Since we use the `GNU Assembler (GAS)` as assembler and `qemu` for emulation, you should ensure `binutils` and `qemu` are installed in your system. Also, `gcc` is necessary too.
+Since we use the `nasm` as assembler and `qemu` for emulation, you should ensure `nasm` and `qemu` are installed in your system. Also, `gcc` is necessary too.
 
 ## Compile Kernel
 
