@@ -1,5 +1,5 @@
 #!/bin/sh
 
-gdb -ix .gdbinit_real_mode \
-  -ex 'set tdesc filename target.xml' \
+gdb -ix gdb/.gdbinit \
+  -ex 'set tdesc filename gdb/target.xml' \
   -ex 'target remote localhost:1234'
