@@ -10,13 +10,13 @@ Since we use the `nasm` as assembler and `qemu` for emulation, you should ensure
 
 ```bash
 git clone https://github.com/CuB3y0nd/Exordium.git && cd Exordium
-chmod +x ./start.sh
+chmod +x start.sh debug.sh
 make clean && make
 ```
 
 After `make`, you can find `exordium.img` generated in root directory of the project if no problems.
 
-Use `./start.sh` to start emulate.
+Use `./start.sh` to start emulate and `./debug.sh` to debug with gdb.
 
 ## License
 
