@@ -19,7 +19,7 @@ section mbr vstart=0x7c00
   ; sector quantities that awaiting to be read
   ; Note: Since we can sure our loader's total size will greater than 512
   ;       bytes, so set to 4 should large enough.
-  mov cx, 0x4
+  mov cx, 4
 
   call read_disk
 

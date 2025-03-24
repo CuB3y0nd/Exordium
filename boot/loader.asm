@@ -9,7 +9,9 @@ SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 [bits 16]
 section loader vstart=LOADER_PHYSICS_ADDR
   ; load global description table
-  lgdt es:[gdt_ptr]
+  mov ax, 0x9000
+  mov ds, ax
+  lgdt [gdt_ptr]
 
   ; open A20 Gate
   in al, 0x92
