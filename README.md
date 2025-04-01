@@ -1,6 +1,6 @@
 # Exordium
 
-A tiny linux kernel built from scratch.
+A tiny UNIX-like linux kernel.
 
 ## Setting up the Development Environment
 
