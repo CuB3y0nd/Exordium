@@ -8,6 +8,8 @@ SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 
 [bits 16]
 section loader vstart=LOADER_PHYSICS_ADDR
+; detect available physical memory RAM's size
+
   ; next ARDS that waiting to return, zero out it in the first call
   xor ebx, ebx
   ; fixed signature: SMAP (System Memory MAP)
@@ -35,7 +37,8 @@ section loader vstart=LOADER_PHYSICS_ADDR
 ; find (BaseAddrLow + LengthLow)'s max value, since we are building 32-bit
 ; architecture os, no need high address, this will be our physical memory size
 
-; Note: because max memory area certainly available, we don't need to examine ARDS type
+; Note: because max memory area certainly available, we don't need to examine
+;       ARDS type
 
   mov cx, es:[ards_nr]
   mov ebx, ards_buf
@@ -44,7 +47,7 @@ section loader vstart=LOADER_PHYSICS_ADDR
 .find_max_mem_area:
   ; BaseAddrLow
   mov eax, [ebx]
-  ; LengthLow
+  ; BaseAddrLow + LengthLow
   add eax, [ebx + 8]
   ; point to next ARDS
   add ebx, 20
@@ -71,13 +74,15 @@ section loader vstart=LOADER_PHYSICS_ADDR
   and eax, 0x0000FFFF
   or edx, eax
   add edx, 0x100000
+  mov esi, edx
 
   ; calculate 16MB ~ 4GB memory size through BX * (64 * 1024B)
   xor eax, eax
   mov ax, bx
   mov ecx, 0x10000
   mul ecx
-  add edx, eax
+  add esi, eax
+  mov edx, esi
   jmp .mem_get_ok
 
 .88:
@@ -153,7 +158,7 @@ total_memory_bytes:
   dd 0
 
 ards_buf:
-  times 244 db 0
+  times 200 db 0
 
 ards_nr:
   dw 0
