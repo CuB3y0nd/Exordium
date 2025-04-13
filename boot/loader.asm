@@ -103,6 +103,8 @@ section loader vstart=LOADER_PHYSICS_ADDR
 .mem_get_ok:
   mov es:[total_memory_bytes], edx
 
+; entering protected mode
+
   ; load global description table
   mov ax, 0x9000
   mov ds, ax
@@ -135,11 +137,107 @@ protected_mode_entry:
   mov ax, SELECTOR_VIDEO
   mov es, ax
 
-  mov byte es:[0], 'P'
+  ; create and initialize page directory table and page tables
+  call setup_paging
+
+  ; dump GDT base and limit information to gdt_ptr
+  sgdt [gdt_ptr]
+
+  ; mapping the video segment base address to kernel space
+  mov ebx, [gdt_ptr + 2]
+  or dword [ebx + 0x18 + 4], 0xc0000000
+
+  ; gdt base plus 0xc0000000 becomes the kernel address
+  add dword [gdt_ptr + 2], 0xc0000000
+
+  ; mapping stack pointer to kernel space too
+  add esp, 0xc0000000
+
+  ; set up page directory base register
+  mov eax, PG_DIR
+  mov cr3, eax
+
+  ; mark the PG (Paging) bit to 1
+  mov eax, cr0
+  or eax, 0x80000000
+  mov cr0, eax
+
+  ; reload GDT with new GDT address
+  lgdt [gdt_ptr]
+
+  mov byte es:[0], 'V'
   mov byte es:[1], 0x07
 
   cli
   hlt
+
+; setup paging
+;
+; This routine sets up paging by setting the page bit in CR0. The page tables
+; are set up, identity-mapping the first 4MB.  The rest are initialized later.
+
+setup_paging:
+  ; sanitize page directory
+  mov edi, PG_DIR
+  mov ecx, 1024
+  xor eax, eax
+  rep stosd
+
+.create_pde:
+  mov eax, PG_DIR
+  ; calculate the address of the first page table entry
+  add eax, 0x1000
+  mov ebx, eax
+
+  ; set PDE attributes
+  or eax, PG_US_U | PG_RW_W | PG_P
+
+  ; since our kernel less than 1MB, so we will just load it kernel to low 1MB
+  ; address
+  ;
+  ; owing to the kernel's virtual address starts at 0xc0000000 (high 1GB memory),
+  ; we should mapping the first 1MB memory of the virtual address started at
+  ; 0xc0000000 to physical 1MB memory due to our kernel in low 1MB physical
+  ; memory
+  ;
+  ; 0x00 ~ 0xbfffffff, 3GB total, for user programs
+  ; 0xc0000000 ~ 0x100000000, 1GB total, for kernel space
+  mov [PG_DIR + 0x00], eax
+  mov [PG_DIR + 0xc00], eax
+
+  ; set the last PDE pointing to their start address to implement so-called
+  ; Page Directory Self-Mapping
+  sub eax, 0x1000
+  mov [PG_DIR + 4092], eax
+
+  ; 1MB low memory / each page size 4KB = 256 total page table entries
+  mov ecx, 256
+  mov esi, 0
+  mov edx, PG_US_U | PG_RW_W | PG_P
+.create_pte:
+  mov [ebx + esi * 4], edx
+  add edx, 0x1000
+  inc esi
+  loop .create_pte
+
+  ; IMPORTANT! for share kernel space in every process, we should determine all
+  ; kernel PDEs in advance
+
+  mov eax, PG_DIR
+  ; calculate the address of the second page table entry
+  add eax, 0x2000
+  or eax, PG_US_U | PG_RW_W | PG_P
+  mov ebx, PG_DIR
+  ; page table entries amounts in 769th (0xc00/4=769) ~ 1022th (last entry had
+  ; been used)
+  mov ecx, 254
+  mov esi, 769
+.create_kernel_pde:
+  mov [ebx + esi * 4], eax
+  add eax, 0x1000
+  inc esi
+  loop .create_kernel_pde
+  ret
 
 _gdt:
   dd 0x00000000, 0x00000000

@@ -61,3 +61,20 @@ RPL3 equ 0b11
 ; TI (Table Indicator) 0 = GDT, 1 = LDT
 TI_GDT equ 0b000
 TI_LDT equ 0b100
+
+
+; Paging
+
+; Page directory starts at 0x100000
+PG_DIR equ 0x100000
+
+; P (Present) 0 = invalid, 1 = present
+PG_P equ 0b1
+
+; RW (Read/Writte) 0 = Read, 1 = Read/Write
+PG_RW_R equ 0b00
+PG_RW_W equ 0b10
+
+; US (User/Supervisor) 0 = Supervisor, 1 = User
+PG_US_S equ 0b000
+PG_US_U equ 0b100
